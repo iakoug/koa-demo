@@ -1,11 +1,13 @@
 const http = require('http')
+const context = require('./context')
+const request = require('./request')
+const response = require('./response')
+const EventEmitter = require('events')
 
-let context = require('./context')
-let request = require('./request')
-let response = require('./response')
-
-class App {
+class App extends EventEmitter {
   constructor() {
+    super()
+
     this.middleware = []
     this.context = context
     this.request = request
@@ -20,18 +22,21 @@ class App {
     return (req, res) => {
       const ctx = this.createContext(req, res)
 
-      this.compose(this.middleware)(ctx).then(() => this.responseBody(ctx))
+      this.compose(this.middleware)(ctx)
+        .then(() => this.responseBody(ctx))
+        .catch(err => this.onerror(err, ctx))
     }
   }
-  
+
   createNext(middleware, oldNext) {
-    return async ctx =>
-      await middleware(ctx, oldNext)
+    return async ctx => await middleware(ctx, oldNext)
   }
 
   compose(middlewares) {
-    return middlewares.reduceRight((oldNext, fn) =>
-      this.createNext(fn, oldNext), async () => Promise.resolve())
+    return middlewares.reduceRight(
+      (oldNext, fn) => this.createNext(fn, oldNext),
+      async () => Promise.resolve()
+    )
   }
 
   use(fn) {
@@ -57,6 +62,14 @@ class App {
     } else if (typeof content === 'object') {
       ctx.res.end(JSON.stringify(content))
     }
+  }
+
+  onerror(err, ctx) {
+    ctx.status = err.code === 'ENOENT' ? 404 : 500
+
+    ctx.res.end(err.message || 'Internal error')
+
+    this.emit('error', err)
   }
 }
 
