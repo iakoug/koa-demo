@@ -1,10 +1,11 @@
 const Koa = require('./')
 
-const app = new Koa
+const app = new Koa()
 
-app.use((req, res) => {
-  res.writeHead(200);
-  res.end('hello s world');
+app.use(async ctx => {
+  ctx.body = 'hello s world' + JSON.stringify(ctx.query) + JSON.stringify
 })
 
-app.listen(3000, () => {})
+app.listen(3000, () => {
+  console.log('server is running at: localhost:3000')
+})
