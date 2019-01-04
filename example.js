@@ -11,7 +11,7 @@ app.use(async (ctx, next) => {
 
 app.use(async (ctx, next) => {
   // console.log(2)
-  throw Error(123)
+  // throw Error(123)
   await next()
   // console.log(2, 'end')
 })
