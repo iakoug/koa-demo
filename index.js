@@ -18,15 +18,24 @@ class App {
 
   callback() {
     return (req, res) => {
-      let ctx = this.createContext(req, res)
-      let respond = () => this.responseBody(ctx)
-      this.cb(ctx).then(respond)
+      const ctx = this.createContext(req, res)
+
+      this.compose(this.middleware)(ctx).then(() => this.responseBody(ctx))
     }
+  }
+  
+  createNext(middleware, oldNext) {
+    return async ctx =>
+      await middleware(ctx, oldNext)
+  }
+
+  compose(middlewares) {
+    return middlewares.reduceRight((oldNext, fn) =>
+      this.createNext(fn, oldNext), async () => Promise.resolve())
   }
 
   use(fn) {
     this.middleware.push(fn)
-    this.cb = fn
   }
 
   createContext(req, res) {

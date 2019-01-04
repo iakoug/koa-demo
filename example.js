@@ -2,8 +2,17 @@ const Koa = require('./')
 
 const app = new Koa()
 
-app.use(async ctx => {
-  ctx.body = 'hello s world' + JSON.stringify(ctx.query) + JSON.stringify
+app.use(async (ctx, next) => {
+  console.log(1)
+  await next()
+  ctx.body = 'hello s world'
+  console.log(1, 'end')
+})
+
+app.use(async (ctx, next) => {
+  console.log(2)
+  await next()
+  console.log(2, 'end')
 })
 
 app.listen(3000, () => {
